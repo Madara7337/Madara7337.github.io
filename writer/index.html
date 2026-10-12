@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Cuaderno</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--safe-top:env(safe-area-inset-top,0px);--safe-bot:env(safe-area-inset-bottom,0px)}
+html,body{height:100%;overflow:hidden}
+body{background:#000;color:#fff;font-family:'Inter',system-ui,sans-serif;font-weight:400}
+.view{display:none;flex-direction:column;height:100%;position:absolute;inset:0;background:#000}
+.view.active{display:flex}
+
+/* Setup */
+.setup{align-items:center;justify-content:center;padding:32px}
+.setup-inner{width:100%;max-width:340px;text-align:center}
+.setup h1{font-family:'Cormorant Garamond',serif;font-size:2.4rem;font-weight:400;margin-bottom:8px}
+.setup .sub{color:#555;font-size:0.8rem;letter-spacing:0.1em;margin-bottom:48px}
+.setup input{width:100%;background:transparent;border:none;border-bottom:1px solid #333;color:#fff;font-family:'Inter',sans-serif;font-size:0.95rem;padding:14px 0;margin-bottom:4px;outline:none;transition:border-color 0.2s}
+.setup input:focus{border-color:#fff}
+.setup input::placeholder{color:#444}
+.setup .hint{font-size:0.7rem;color:#444;text-align:left;margin-bottom:20px}
+.setup button{width:100%;background:#fff;color:#000;border:none;font-family:'Inter',sans-serif;font-size:0.9rem;font-weight:500;padding:14px;border-radius:4px;margin-top:16px;cursor:pointer;transition:opacity 0.2s}
+.setup button:active{opacity:0.7}
+.setup .err{color:#ff4444;font-size:0.8rem;margin-top:12px;min-height:20px}
+
+/* Top bar */
+.topbar{display:flex;align-items:center;padding:12px 20px;padding-top:calc(12px + var(--safe-top));min-height:56px;gap:12px}
+.topbar h2{font-size:1.1rem;font-weight:500;flex:1}
+.topbar-btn{background:none;border:none;color:#fff;font-family:'Inter',sans-serif;font-size:0.85rem;cursor:pointer;padding:8px 0}
+.topbar-btn:active{opacity:0.5}
+.topbar-back{font-size:1.2rem;padding:8px 4px 8px 0}
+.topbar-action{font-weight:500;letter-spacing:0.03em}
+
+/* Bottom nav */
+.bottom-nav{display:flex;border-top:1px solid #161616;padding-bottom:var(--safe-bot);background:#000}
+.nav-btn{flex:1;background:none;border:none;color:#444;font-family:'Inter',sans-serif;font-size:0.75rem;padding:12px 0 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:color 0.2s}
+.nav-btn.active{color:#fff}
+.nav-icon{font-size:1.3rem}
+
+/* List */
+.list-wrap{flex:1;overflow-y:auto;padding:0 20px 20px}
+.entry-card{border-bottom:1px solid #111;padding:18px 0;cursor:pointer;transition:opacity 0.2s}
+.entry-card:active{opacity:0.5}
+.card-title{display:block;font-size:0.95rem;text-transform:capitalize;margin-bottom:4px}
+.card-date{display:block;font-size:0.7rem;color:#444;letter-spacing:0.08em}
+.empty-msg{color:#333;font-style:italic;text-align:center;margin-top:60px;font-family:'Cormorant Garamond',serif;font-size:1.1rem}
+.loading-msg{color:#333;text-align:center;margin-top:60px;font-size:0.8rem;letter-spacing:0.1em}
+
+/* FAB */
+.fab{position:absolute;right:24px;bottom:calc(72px + var(--safe-bot));width:52px;height:52px;border-radius:50%;background:#fff;color:#000;border:none;font-size:1.5rem;font-weight:300;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,0.8);z-index:10;transition:transform 0.15s}
+.fab:active{transform:scale(0.9)}
+
+/* PIN gate */
+.pin-gate{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:32px}
+.pin-gate p{color:#555;font-size:0.85rem;letter-spacing:0.1em}
+.pin-input{background:transparent;border:none;border-bottom:2px solid #333;color:#fff;font-size:2rem;text-align:center;width:160px;padding:8px;letter-spacing:0.5em;outline:none;font-family:'Inter',sans-serif}
+.pin-input:focus{border-color:#fff}
+.pin-btn{background:none;border:1px solid #333;color:#fff;font-family:'Inter',sans-serif;font-size:0.85rem;padding:10px 32px;border-radius:4px;cursor:pointer;transition:all 0.2s}
+.pin-btn:hover{border-color:#fff}
+.pin-err{color:#ff4444;font-size:0.75rem;min-height:18px}
+
+/* Editor */
+.editor-title{width:100%;background:transparent;border:none;color:#fff;font-family:'Cormorant Garamond',serif;font-size:1.6rem;padding:20px 20px 12px;outline:none}
+.editor-title::placeholder{color:#333}
+.editor-content{flex:1;width:100%;background:transparent;border:none;color:#ccc;font-family:'Cormorant Garamond',serif;font-size:1.15rem;line-height:1.9;padding:0 20px 20px;outline:none;resize:none}
+.editor-content::placeholder{color:#222}
+
+/* Viewer */
+.viewer-body{flex:1;overflow-y:auto;padding:20px 24px 40px;text-align:center}
+.viewer-title{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:400;font-style:italic;margin-bottom:8px}
+.viewer-date{font-size:0.7rem;color:#444;letter-spacing:0.15em;margin-bottom:32px}
+.viewer-text{font-family:'Cormorant Garamond',serif;font-size:1.15rem;line-height:2;color:#ccc;white-space:pre-line}
+
+/* Toast */
+.toast{position:fixed;bottom:calc(80px + var(--safe-bot));left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;font-size:0.8rem;padding:10px 24px;border-radius:20px;opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:100}
+.toast.show{opacity:1}
+
+/* Settings */
+.settings-content{flex:1;overflow-y:auto;padding:20px}
+.settings-item{padding:18px 0;border-bottom:1px solid #111;cursor:pointer}
+.settings-item:active{opacity:0.5}
+.settings-label{font-size:0.9rem;margin-bottom:4px}
+.settings-desc{font-size:0.7rem;color:#444}
+.settings-danger{color:#ff4444}
+</style>
+</head>
+<body>
+
+<!-- SETUP VIEW -->
+<div id="v-setup" class="view setup">
+  <div class="setup-inner">
+    <h1>Cuaderno</h1>
+    <p class="sub">poemas &amp; sueños</p>
+    <input id="s-token" type="password" placeholder="GitHub Personal Access Token" autocomplete="off">
+    <p class="hint">Necesario para publicar. Se guarda solo en este dispositivo.</p>
+    <input id="s-pin" type="password" inputmode="numeric" placeholder="PIN para sueños (4+ dígitos)" maxlength="8">
+    <p class="hint">Protege la sección de sueños.</p>
+    <input id="s-pin2" type="password" inputmode="numeric" placeholder="Confirmar PIN" maxlength="8">
+    <p class="hint">&nbsp;</p>
+    <button onclick="doSetup()">Comenzar</button>
+    <p id="s-err" class="err"></p>
+  </div>
+</div>
+
+<!-- MAIN VIEW -->
+<div id="v-main" class="view">
+  <div class="topbar">
+    <h2 id="main-title">Poemas</h2>
+    <button class="topbar-btn" onclick="showSettings()" style="font-size:1.1rem">⚙</button>
+  </div>
+  <div id="poems-list" class="list-wrap"></div>
+  <div id="dreams-gate" class="pin-gate" style="display:none">
+    <p>Ingresa tu PIN</p>
+    <input id="pin-input" class="pin-input" type="password" inputmode="numeric" maxlength="8">
+    <button class="pin-btn" onclick="checkPin()">Entrar</button>
+    <p id="pin-err" class="pin-err"></p>
+  </div>
+  <div id="dreams-list" class="list-wrap" style="display:none"></div>
+  <button class="fab" onclick="newEntry()">+</button>
+  <nav class="bottom-nav">
+    <button class="nav-btn active" onclick="switchTab('poems',this)"><span class="nav-icon">✦</span>Poemas</button>
+    <button class="nav-btn" onclick="switchTab('dreams',this)"><span class="nav-icon">☾</span>Sueños</button>
+  </nav>
+</div>
+
+<!-- EDITOR VIEW -->
+<div id="v-editor" class="view">
+  <div class="topbar">
+    <button class="topbar-btn topbar-back" onclick="closeEditor()">‹</button>
+    <h2 id="ed-label" style="flex:1">Nuevo poema</h2>
+    <button class="topbar-btn topbar-action" id="ed-save" onclick="publish()">Publicar</button>
+  </div>
+  <input id="ed-title" class="editor-title" placeholder="Título" autocomplete="off">
+  <textarea id="ed-content" class="editor-content" placeholder="Escribe aquí..."></textarea>
+</div>
+
+<!-- VIEWER VIEW -->
+<div id="v-viewer" class="view">
+  <div class="topbar">
+    <button class="topbar-btn topbar-back" onclick="closeViewer()">‹</button>
+    <h2 style="flex:1"></h2>
+  </div>
+  <div class="viewer-body" id="viewer-body"></div>
+</div>
+
+<!-- SETTINGS VIEW -->
+<div id="v-settings" class="view">
+  <div class="topbar">
+    <button class="topbar-btn topbar-back" onclick="closeSettings()">‹</button>
+    <h2 style="flex:1">Configuración</h2>
+  </div>
+  <div class="settings-content">
+    <div class="settings-item" onclick="changePin()">
+      <div class="settings-label">Cambiar PIN</div>
+      <div class="settings-desc">Cambia el PIN de acceso a sueños</div>
+    </div>
+    <div class="settings-item" onclick="changeToken()">
+      <div class="settings-label">Cambiar Token</div>
+      <div class="settings-desc">Actualizar el token de GitHub</div>
+    </div>
+    <div class="settings-item" onclick="resetApp()">
+      <div class="settings-label settings-danger">Borrar datos</div>
+      <div class="settings-desc">Elimina token y PIN de este dispositivo</div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const API='https://api.github.com';
+const POEMS_REPO='Madara7337/poemas';
+const DREAMS_REPO='Madara7337/suenos';
+let tab='poems',unlocked=false;
+
+function getToken(){try{return localStorage.getItem('cdr_tk')}catch(e){return null}}
+function setToken(t){try{localStorage.setItem('cdr_tk',t)}catch(e){}}
+function getPinHash(){try{return localStorage.getItem('cdr_ph')}catch(e){return null}}
+function setPinHash(h){try{localStorage.setItem('cdr_ph',h)}catch(e){}}
+
+async function sha256(s){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
+  return[...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+function show(id){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(id).classList.add('active')}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500)}
+
+function init(){
+  if(!getToken()||!getPinHash()){show('v-setup')}
+  else{show('v-main');loadPoems()}
+}
+
+async function doSetup(){
+  const tk=document.getElementById('s-token').value.trim();
+  const p1=document.getElementById('s-pin').value;
+  const p2=document.getElementById('s-pin2').value;
+  const err=document.getElementById('s-err');
+  if(!tk){err.textContent='Token requerido';return}
+  if(p1.length<4){err.textContent='PIN: mínimo 4 dígitos';return}
+  if(p1!==p2){err.textContent='Los PINs no coinciden';return}
+  err.textContent='Verificando...';
+  try{
+    const r=await fetch(API+'/user',{headers:{Authorization:'token '+tk}});
+    if(!r.ok){err.textContent='Token inválido';return}
+  }catch(e){err.textContent='Error de conexión';return}
+  setToken(tk);setPinHash(await sha256(p1));
+  await ensureDir(POEMS_REPO,'poems');
+  await ensureDir(DREAMS_REPO,'dreams');
+  show('v-main');loadPoems();toast('Configurado ✓');
+}
+
+async function ghFetch(url,opts={}){
+  return fetch(url,{...opts,headers:{Authorization:'token '+getToken(),Accept:'application/vnd.github.v3+json',...(opts.headers||{})}});
+}
+
+async function ensureDir(repo,dir){
+  const r=await ghFetch(`${API}/repos/${repo}/contents/${dir}`);
+  if(r.ok)return;
+  await ghFetch(`${API}/repos/${repo}/contents/${dir}/.gitkeep`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:'init '+dir,content:btoa('')})});
+}
+
+async function listFiles(repo,dir){
+  const r=await ghFetch(`${API}/repos/${repo}/contents/${dir}`);
+  if(!r.ok)return[];
+  return(await r.json()).filter(f=>f.name.endsWith('.md')&&f.name!=='.gitkeep').sort((a,b)=>b.name.localeCompare(a.name));
+}
+
+async function getFile(repo,path){
+  const r=await ghFetch(`${API}/repos/${repo}/contents/${path}`);
+  if(!r.ok)return null;
+  const d=await r.json();
+  return{content:decodeURIComponent(escape(atob(d.content.replace(/\n/g,'')))),sha:d.sha};
+}
+
+async function putFile(repo,path,content,msg){
+  const r=await ghFetch(`${API}/repos/${repo}/contents/${path}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg,content:btoa(unescape(encodeURIComponent(content)))})});
+  return r.ok;
+}
+
+function renderList(files,container){
+  const el=document.getElementById(container);
+  if(!files.length){el.innerHTML='<p class="empty-msg">Nada aún...</p>';return}
+  el.innerHTML='';
+  for(const f of files){
+    const c=document.createElement('div');c.className='entry-card';
+    const name=f.name.replace('.md','').replace(/^\d{4}-\d{2}-\d{2}-/,'').replace(/-/g,' ');
+    const dm=f.name.match(/^(\d{4})-(\d{2})-(\d{2})/);
+    const months=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+    const dateStr=dm?`${parseInt(dm[3])} ${months[parseInt(dm[2])-1]} ${dm[1]}`:'';
+    c.innerHTML=`<span class="card-title">${name}</span><span class="card-date">${dateStr}</span>`;
+    const repo=container==='poems-list'?POEMS_REPO:DREAMS_REPO;
+    c.onclick=()=>viewEntry(repo,f.path);
+    el.appendChild(c);
+  }
+}
+
+async function loadPoems(){
+  document.getElementById('poems-list').innerHTML='<p class="loading-msg">cargando...</p>';
+  const files=await listFiles(POEMS_REPO,'poems');
+  renderList(files,'poems-list');
+}
+
+async function loadDreams(){
+  document.getElementById('dreams-list').innerHTML='<p class="loading-msg">cargando...</p>';
+  const files=await listFiles(DREAMS_REPO,'dreams');
+  renderList(files,'dreams-list');
+}
+
+function switchTab(t,btn){
+  tab=t;
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const pl=document.getElementById('poems-list');
+  const dg=document.getElementById('dreams-gate');
+  const dl=document.getElementById('dreams-list');
+  if(t==='poems'){
+    document.getElementById('main-title').textContent='Poemas';
+    pl.style.display='';dg.style.display='none';dl.style.display='none';
+    loadPoems();
+  }else{
+    document.getElementById('main-title').textContent='Sueños';
+    pl.style.display='none';
+    if(unlocked){dg.style.display='none';dl.style.display='';loadDreams()}
+    else{dg.style.display='';dl.style.display='none';setTimeout(()=>document.getElementById('pin-input').focus(),100)}
+  }
+}
+
+async function checkPin(){
+  const pin=document.getElementById('pin-input').value;
+  const hash=await sha256(pin);
+  if(hash===getPinHash()){
+    unlocked=true;
+    document.getElementById('pin-input').value='';
+    document.getElementById('pin-err').textContent='';
+    document.getElementById('dreams-gate').style.display='none';
+    document.getElementById('dreams-list').style.display='';
+    loadDreams();
+  }else{
+    document.getElementById('pin-err').textContent='PIN incorrecto';
+    document.getElementById('pin-input').value='';
+  }
+}
+
+function newEntry(){
+  const type=tab==='poems'?'poema':'sueño';
+  document.getElementById('ed-label').textContent='Nuevo '+type;
+  document.getElementById('ed-title').value='';
+  document.getElementById('ed-content').value='';
+  document.getElementById('ed-save').disabled=false;
+  document.getElementById('ed-save').textContent='Publicar';
+  show('v-editor');
+  setTimeout(()=>document.getElementById('ed-title').focus(),100);
+}
+
+async function publish(){
+  const title=document.getElementById('ed-title').value.trim();
+  const content=document.getElementById('ed-content').value.trim();
+  if(!title){toast('Escribe un título');return}
+  if(!content){toast('Escribe algo');return}
+  const btn=document.getElementById('ed-save');
+  btn.disabled=true;btn.textContent='...';
+  const now=new Date();
+  const date=now.toISOString().split('T')[0];
+  const slug=title.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  const filename=`${date}-${slug}.md`;
+  const body=`---\ntitle: ${title}\ndate: ${date}\n---\n\n${content}\n`;
+  const isPoem=tab==='poems';
+  const repo=isPoem?POEMS_REPO:DREAMS_REPO;
+  const dir=isPoem?'poems':'dreams';
+  const msg=isPoem?`Nuevo poema: ${title}`:`Nuevo sueño: ${title}`;
+  const ok=await putFile(repo,`${dir}/${filename}`,body,msg);
+  btn.disabled=false;btn.textContent='Publicar';
+  if(ok){
+    show('v-main');
+    toast(isPoem?'Poema publicado ✓':'Sueño guardado ✓');
+    if(isPoem)loadPoems();else loadDreams();
+  }else{toast('Error al publicar')}
+}
+
+function parseFM(txt){
+  const m=txt.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)/);
+  if(!m)return{title:'',date:'',body:txt.trim()};
+  const meta={};m[1].split('\n').forEach(l=>{const i=l.indexOf(':');if(i>0)meta[l.slice(0,i).trim()]=l.slice(i+1).trim()});
+  return{...meta,body:m[2].trim()};
+}
+
+async function viewEntry(repo,path){
+  show('v-viewer');
+  const vb=document.getElementById('viewer-body');
+  vb.innerHTML='<p class="loading-msg">cargando...</p>';
+  const file=await getFile(repo,path);
+  if(!file){vb.innerHTML='<p class="empty-msg">Error al cargar</p>';return}
+  const p=parseFM(file.content);
+  const months=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  let dateStr='';
+  if(p.date){const[y,m,d]=p.date.split('-');dateStr=`${parseInt(d)} de ${months[parseInt(m)-1]} ${y}`}
+  vb.innerHTML=`<h2 class="viewer-title">${p.title||'Sin título'}</h2><p class="viewer-date">${dateStr}</p><div class="viewer-text">${p.body}</div>`;
+}
+
+function closeEditor(){show('v-main')}
+function closeViewer(){show('v-main')}
+function showSettings(){show('v-settings')}
+function closeSettings(){show('v-main')}
+
+async function changePin(){
+  const old=prompt('PIN actual:');if(!old)return;
+  const h=await sha256(old);
+  if(h!==getPinHash()){toast('PIN incorrecto');return}
+  const n=prompt('Nuevo PIN (4+ dígitos):');if(!n||n.length<4){toast('Mínimo 4 dígitos');return}
+  const c=prompt('Confirmar nuevo PIN:');if(n!==c){toast('No coinciden');return}
+  setPinHash(await sha256(n));unlocked=false;toast('PIN cambiado ✓');closeSettings();
+}
+
+function changeToken(){
+  const t=prompt('Nuevo GitHub Token:');if(!t)return;
+  setToken(t.trim());toast('Token actualizado ✓');closeSettings();
+}
+
+function resetApp(){
+  if(!confirm('¿Borrar token y PIN de este dispositivo?'))return;
+  try{localStorage.removeItem('cdr_tk');localStorage.removeItem('cdr_ph')}catch(e){}
+  unlocked=false;show('v-setup');toast('Datos borrados');
+}
+
+document.getElementById('pin-input').addEventListener('keydown',e=>{if(e.key==='Enter')checkPin()});
+
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+init();
+</script>
+</body>
+</html>
