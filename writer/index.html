@@ -37,6 +37,7 @@ body{background:#000;color:#fff;font-family:'Inter',system-ui,sans-serif;font-we
 .topbar-btn:active{opacity:0.5}
 .topbar-back{font-size:1.2rem;padding:8px 4px 8px 0}
 .topbar-action{font-weight:500;letter-spacing:0.03em}
+.topbar-delete{color:#ff4444}
 
 /* Bottom nav */
 .bottom-nav{display:flex;border-top:1px solid #161616;padding-bottom:var(--safe-bot);background:#000}
@@ -89,6 +90,18 @@ body{background:#000;color:#fff;font-family:'Inter',system-ui,sans-serif;font-we
 .settings-label{font-size:0.9rem;margin-bottom:4px}
 .settings-desc{font-size:0.7rem;color:#444}
 .settings-danger{color:#ff4444}
+
+/* Delete confirm overlay */
+.confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:50;padding:24px}
+.confirm-box{background:#111;border:1px solid #222;border-radius:12px;padding:28px 24px;max-width:320px;width:100%;text-align:center}
+.confirm-box p{font-size:0.9rem;color:#aaa;margin-bottom:8px;line-height:1.5}
+.confirm-box .confirm-name{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-style:italic;color:#fff;margin-bottom:24px}
+.confirm-btns{display:flex;gap:12px}
+.confirm-btns button{flex:1;padding:12px;border-radius:6px;border:none;font-family:'Inter',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer}
+.confirm-cancel{background:#222;color:#fff}
+.confirm-cancel:active{opacity:0.6}
+.confirm-delete{background:#ff4444;color:#fff}
+.confirm-delete:active{opacity:0.6}
 </style>
 </head>
 <body>
@@ -113,7 +126,7 @@ body{background:#000;color:#fff;font-family:'Inter',system-ui,sans-serif;font-we
 <div id="v-main" class="view">
   <div class="topbar">
     <h2 id="main-title">Poemas</h2>
-    <button class="topbar-btn" onclick="showSettings()" style="font-size:1.1rem">⚙</button>
+    <button class="topbar-btn" onclick="showSettings()" style="font-size:1.1rem">&#9881;</button>
   </div>
   <div id="poems-list" class="list-wrap"></div>
   <div id="dreams-gate" class="pin-gate" style="display:none">
@@ -125,15 +138,15 @@ body{background:#000;color:#fff;font-family:'Inter',system-ui,sans-serif;font-we
   <div id="dreams-list" class="list-wrap" style="display:none"></div>
   <button class="fab" onclick="newEntry()">+</button>
   <nav class="bottom-nav">
-    <button class="nav-btn active" onclick="switchTab('poems',this)"><span class="nav-icon">✦</span>Poemas</button>
-    <button class="nav-btn" onclick="switchTab('dreams',this)"><span class="nav-icon">☾</span>Sueños</button>
+    <button class="nav-btn active" onclick="switchTab('poems',this)"><span class="nav-icon">&#10022;</span>Poemas</button>
+    <button class="nav-btn" onclick="switchTab('dreams',this)"><span class="nav-icon">&#9790;</span>Sueños</button>
   </nav>
 </div>
 
 <!-- EDITOR VIEW -->
 <div id="v-editor" class="view">
   <div class="topbar">
-    <button class="topbar-btn topbar-back" onclick="closeEditor()">‹</button>
+    <button class="topbar-btn topbar-back" onclick="closeEditor()">&#8249;</button>
     <h2 id="ed-label" style="flex:1">Nuevo poema</h2>
     <button class="topbar-btn topbar-action" id="ed-save" onclick="publish()">Publicar</button>
   </div>
@@ -144,8 +157,10 @@ body{background:#000;color:#fff;font-family:'Inter',system-ui,sans-serif;font-we
 <!-- VIEWER VIEW -->
 <div id="v-viewer" class="view">
   <div class="topbar">
-    <button class="topbar-btn topbar-back" onclick="closeViewer()">‹</button>
+    <button class="topbar-btn topbar-back" onclick="closeViewer()">&#8249;</button>
     <h2 style="flex:1"></h2>
+    <button class="topbar-btn topbar-action" onclick="editEntry()">Editar</button>
+    <button class="topbar-btn topbar-delete" onclick="confirmDeleteEntry()">Eliminar</button>
   </div>
   <div class="viewer-body" id="viewer-body"></div>
 </div>
@@ -153,7 +168,7 @@ body{background:#000;color:#fff;font-family:'Inter',system-ui,sans-serif;font-we
 <!-- SETTINGS VIEW -->
 <div id="v-settings" class="view">
   <div class="topbar">
-    <button class="topbar-btn topbar-back" onclick="closeSettings()">‹</button>
+    <button class="topbar-btn topbar-back" onclick="closeSettings()">&#8249;</button>
     <h2 style="flex:1">Configuración</h2>
   </div>
   <div class="settings-content">
@@ -172,6 +187,18 @@ body{background:#000;color:#fff;font-family:'Inter',system-ui,sans-serif;font-we
   </div>
 </div>
 
+<!-- DELETE CONFIRMATION -->
+<div id="confirm-overlay" class="confirm-overlay" style="display:none">
+  <div class="confirm-box">
+    <p>¿Eliminar esto?</p>
+    <div id="confirm-name" class="confirm-name"></div>
+    <div class="confirm-btns">
+      <button class="confirm-cancel" onclick="cancelDelete()">Cancelar</button>
+      <button class="confirm-delete" id="confirm-del-btn" onclick="doDelete()">Eliminar</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast" class="toast"></div>
 
 <script>
@@ -179,6 +206,11 @@ const API='https://api.github.com';
 const POEMS_REPO='Madara7337/poemas';
 const DREAMS_REPO='Madara7337/suenos';
 let tab='poems',unlocked=false;
+let currentEntry=null; // {repo, path, sha, title, body, date}
+let editMode=false;    // true when editing existing entry
+let editSha=null;      // sha of file being edited
+let editPath=null;     // path of file being edited
+let editRepo=null;     // repo of file being edited
 
 function getToken(){try{return localStorage.getItem('cdr_tk')}catch(e){return null}}
 function setToken(t){try{localStorage.setItem('cdr_tk',t)}catch(e){}}
@@ -240,8 +272,15 @@ async function getFile(repo,path){
   return{content:decodeURIComponent(escape(atob(d.content.replace(/\n/g,'')))),sha:d.sha};
 }
 
-async function putFile(repo,path,content,msg){
-  const r=await ghFetch(`${API}/repos/${repo}/contents/${path}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg,content:btoa(unescape(encodeURIComponent(content)))})});
+async function putFile(repo,path,content,msg,sha){
+  const body={message:msg,content:btoa(unescape(encodeURIComponent(content)))};
+  if(sha)body.sha=sha;
+  const r=await ghFetch(`${API}/repos/${repo}/contents/${path}`,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+  return r.ok;
+}
+
+async function deleteFile(repo,path,sha,msg){
+  const r=await ghFetch(`${API}/repos/${repo}/contents/${path}`,{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg,sha:sha})});
   return r.ok;
 }
 
@@ -310,6 +349,7 @@ async function checkPin(){
 }
 
 function newEntry(){
+  editMode=false;editSha=null;editPath=null;editRepo=null;
   const type=tab==='poems'?'poema':'sueño';
   document.getElementById('ed-label').textContent='Nuevo '+type;
   document.getElementById('ed-title').value='';
@@ -320,6 +360,22 @@ function newEntry(){
   setTimeout(()=>document.getElementById('ed-title').focus(),100);
 }
 
+function editEntry(){
+  if(!currentEntry)return;
+  editMode=true;
+  editSha=currentEntry.sha;
+  editPath=currentEntry.path;
+  editRepo=currentEntry.repo;
+  const isPoem=editRepo===POEMS_REPO;
+  document.getElementById('ed-label').textContent='Editar '+(isPoem?'poema':'sueño');
+  document.getElementById('ed-title').value=currentEntry.title||'';
+  document.getElementById('ed-content').value=currentEntry.body||'';
+  document.getElementById('ed-save').disabled=false;
+  document.getElementById('ed-save').textContent='Guardar';
+  show('v-editor');
+  setTimeout(()=>document.getElementById('ed-content').focus(),100);
+}
+
 async function publish(){
   const title=document.getElementById('ed-title').value.trim();
   const content=document.getElementById('ed-content').value.trim();
@@ -327,22 +383,37 @@ async function publish(){
   if(!content){toast('Escribe algo');return}
   const btn=document.getElementById('ed-save');
   btn.disabled=true;btn.textContent='...';
-  const now=new Date();
-  const date=now.toISOString().split('T')[0];
-  const slug=title.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
-  const filename=`${date}-${slug}.md`;
-  const body=`---\ntitle: ${title}\ndate: ${date}\n---\n\n${content}\n`;
-  const isPoem=tab==='poems';
-  const repo=isPoem?POEMS_REPO:DREAMS_REPO;
-  const dir=isPoem?'poems':'dreams';
-  const msg=isPoem?`Nuevo poema: ${title}`:`Nuevo sueño: ${title}`;
-  const ok=await putFile(repo,`${dir}/${filename}`,body,msg);
-  btn.disabled=false;btn.textContent='Publicar';
-  if(ok){
-    show('v-main');
-    toast(isPoem?'Poema publicado ✓':'Sueño guardado ✓');
-    if(isPoem)loadPoems();else loadDreams();
-  }else{toast('Error al publicar')}
+
+  const body=`---\ntitle: ${title}\ndate: ${editMode&&currentEntry?currentEntry.date:new Date().toISOString().split('T')[0]}\n---\n\n${content}\n`;
+
+  if(editMode&&editPath&&editRepo){
+    const isPoem=editRepo===POEMS_REPO;
+    const msg=isPoem?`Editar poema: ${title}`:`Editar sueño: ${title}`;
+    const ok=await putFile(editRepo,editPath,body,msg,editSha);
+    btn.disabled=false;btn.textContent='Guardar';
+    if(ok){
+      editMode=false;editSha=null;editPath=null;editRepo=null;
+      show('v-main');
+      toast(isPoem?'Poema actualizado ✓':'Sueño actualizado ✓');
+      if(isPoem)loadPoems();else loadDreams();
+    }else{toast('Error al guardar')}
+  }else{
+    const now=new Date();
+    const date=now.toISOString().split('T')[0];
+    const slug=title.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+    const filename=`${date}-${slug}.md`;
+    const isPoem=tab==='poems';
+    const repo=isPoem?POEMS_REPO:DREAMS_REPO;
+    const dir=isPoem?'poems':'dreams';
+    const msg=isPoem?`Nuevo poema: ${title}`:`Nuevo sueño: ${title}`;
+    const ok=await putFile(repo,`${dir}/${filename}`,body,msg);
+    btn.disabled=false;btn.textContent='Publicar';
+    if(ok){
+      show('v-main');
+      toast(isPoem?'Poema publicado ✓':'Sueño guardado ✓');
+      if(isPoem)loadPoems();else loadDreams();
+    }else{toast('Error al publicar')}
+  }
 }
 
 function parseFM(txt){
@@ -357,16 +428,47 @@ async function viewEntry(repo,path){
   const vb=document.getElementById('viewer-body');
   vb.innerHTML='<p class="loading-msg">cargando...</p>';
   const file=await getFile(repo,path);
-  if(!file){vb.innerHTML='<p class="empty-msg">Error al cargar</p>';return}
+  if(!file){vb.innerHTML='<p class="empty-msg">Error al cargar</p>';currentEntry=null;return}
   const p=parseFM(file.content);
+  currentEntry={repo:repo,path:path,sha:file.sha,title:p.title,body:p.body,date:p.date};
   const months=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
   let dateStr='';
   if(p.date){const[y,m,d]=p.date.split('-');dateStr=`${parseInt(d)} de ${months[parseInt(m)-1]} ${y}`}
   vb.innerHTML=`<h2 class="viewer-title">${p.title||'Sin título'}</h2><p class="viewer-date">${dateStr}</p><div class="viewer-text">${p.body}</div>`;
 }
 
-function closeEditor(){show('v-main')}
-function closeViewer(){show('v-main')}
+function confirmDeleteEntry(){
+  if(!currentEntry)return;
+  document.getElementById('confirm-name').textContent=currentEntry.title||'Sin título';
+  document.getElementById('confirm-overlay').style.display='flex';
+}
+
+function cancelDelete(){
+  document.getElementById('confirm-overlay').style.display='none';
+}
+
+async function doDelete(){
+  if(!currentEntry)return;
+  const btn=document.getElementById('confirm-del-btn');
+  btn.disabled=true;btn.textContent='...';
+  const isPoem=currentEntry.repo===POEMS_REPO;
+  const msg=isPoem?`Eliminar poema: ${currentEntry.title}`:`Eliminar sueño: ${currentEntry.title}`;
+  const ok=await deleteFile(currentEntry.repo,currentEntry.path,currentEntry.sha,msg);
+  btn.disabled=false;btn.textContent='Eliminar';
+  document.getElementById('confirm-overlay').style.display='none';
+  if(ok){
+    currentEntry=null;
+    show('v-main');
+    toast(isPoem?'Poema eliminado':'Sueño eliminado');
+    if(isPoem)loadPoems();else loadDreams();
+  }else{toast('Error al eliminar')}
+}
+
+function closeEditor(){
+  editMode=false;editSha=null;editPath=null;editRepo=null;
+  if(currentEntry)show('v-viewer');else show('v-main');
+}
+function closeViewer(){currentEntry=null;show('v-main')}
 function showSettings(){show('v-settings')}
 function closeSettings(){show('v-main')}
 
@@ -391,6 +493,7 @@ function resetApp(){
 }
 
 document.getElementById('pin-input').addEventListener('keydown',e=>{if(e.key==='Enter')checkPin()});
+document.getElementById('confirm-overlay').addEventListener('click',e=>{if(e.target===document.getElementById('confirm-overlay'))cancelDelete()});
 
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 init();
