@@ -8,100 +8,141 @@
 <meta name="theme-color" content="#000000">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--safe-top:env(safe-area-inset-top,0px);--safe-bot:env(safe-area-inset-bottom,0px)}
+:root{
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bot:env(safe-area-inset-bottom,0px);
+  --bg:#000;
+  --bg2:#0a0a0a;
+  --bg3:#141414;
+  --border:#1a1a1a;
+  --text:#f0f0f0;
+  --text2:#888;
+  --text3:#444;
+  --accent:#c8a97e;
+  --accent-dim:rgba(200,169,126,0.1);
+  --danger:#e54;
+}
 html,body{height:100%;overflow:hidden}
-body{background:#000;color:#fff;font-family:'Inter',system-ui,sans-serif;font-weight:400}
-.view{display:none;flex-direction:column;height:100%;position:absolute;inset:0;background:#000}
-.view.active{display:flex}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;font-weight:400}
+
+/* View system with transitions */
+.view{display:none;flex-direction:column;height:100%;position:absolute;inset:0;background:var(--bg);z-index:1}
+.view.active{display:flex;animation:fadeIn 0.2s ease}
+.view.slide-in{display:flex;animation:slideIn 0.25s ease}
+.view.slide-out{display:flex;animation:slideOut 0.2s ease forwards}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0.8}to{transform:translateX(0);opacity:1}}
+@keyframes slideOut{from{transform:translateX(0);opacity:1}to{transform:translateX(100%);opacity:0}}
 
 /* Setup */
 .setup{align-items:center;justify-content:center;padding:32px}
 .setup-inner{width:100%;max-width:340px;text-align:center}
-.setup h1{font-family:'Cormorant Garamond',serif;font-size:2.4rem;font-weight:400;margin-bottom:8px}
-.setup .sub{color:#555;font-size:0.8rem;letter-spacing:0.1em;margin-bottom:48px}
-.setup input{width:100%;background:transparent;border:none;border-bottom:1px solid #333;color:#fff;font-family:'Inter',sans-serif;font-size:0.95rem;padding:14px 0;margin-bottom:4px;outline:none;transition:border-color 0.2s}
-.setup input:focus{border-color:#fff}
-.setup input::placeholder{color:#444}
-.setup .hint{font-size:0.7rem;color:#444;text-align:left;margin-bottom:20px}
-.setup button{width:100%;background:#fff;color:#000;border:none;font-family:'Inter',sans-serif;font-size:0.9rem;font-weight:500;padding:14px;border-radius:4px;margin-top:16px;cursor:pointer;transition:opacity 0.2s}
+.setup h1{font-family:'Cormorant Garamond',serif;font-size:2.8rem;font-weight:300;margin-bottom:4px;letter-spacing:0.02em}
+.setup .sub{color:var(--accent);font-size:0.75rem;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:48px}
+.setup input{width:100%;background:transparent;border:none;border-bottom:1px solid var(--border);color:var(--text);font-family:'Inter',sans-serif;font-size:0.9rem;padding:14px 0;margin-bottom:4px;outline:none;transition:border-color 0.2s}
+.setup input:focus{border-color:var(--accent)}
+.setup input::placeholder{color:var(--text3)}
+.setup .hint{font-size:0.68rem;color:var(--text3);text-align:left;margin-bottom:20px}
+.setup button{width:100%;background:var(--text);color:var(--bg);border:none;font-family:'Inter',sans-serif;font-size:0.85rem;font-weight:500;padding:14px;border-radius:6px;margin-top:16px;cursor:pointer;transition:opacity 0.2s;letter-spacing:0.03em}
 .setup button:active{opacity:0.7}
-.setup .err{color:#ff4444;font-size:0.8rem;margin-top:12px;min-height:20px}
+.setup .err{color:var(--danger);font-size:0.8rem;margin-top:12px;min-height:20px}
 
 /* Top bar */
 .topbar{display:flex;align-items:center;padding:12px 20px;padding-top:calc(12px + var(--safe-top));min-height:56px;gap:12px}
-.topbar h2{font-size:1.1rem;font-weight:500;flex:1}
-.topbar-btn{background:none;border:none;color:#fff;font-family:'Inter',sans-serif;font-size:0.85rem;cursor:pointer;padding:8px 0}
-.topbar-btn:active{opacity:0.5}
-.topbar-back{font-size:1.2rem;padding:8px 4px 8px 0}
-.topbar-action{font-weight:500;letter-spacing:0.03em}
-.topbar-delete{color:#ff4444}
+.topbar h2{font-size:1.05rem;font-weight:500;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.topbar-btn{background:none;border:none;color:var(--text);font-family:'Inter',sans-serif;font-size:0.85rem;cursor:pointer;padding:8px 0;transition:opacity 0.15s}
+.topbar-btn:active{opacity:0.4}
+.topbar-back{font-size:1.4rem;padding:8px 4px 8px 0;line-height:1}
+.topbar-action{font-weight:500;letter-spacing:0.03em;color:var(--accent)}
+.topbar-delete{color:var(--danger);font-size:0.8rem}
+
+/* Search */
+.search-wrap{padding:0 20px 12px}
+.search-box{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-family:'Inter',sans-serif;font-size:0.85rem;outline:none;transition:border-color 0.2s}
+.search-box:focus{border-color:var(--accent)}
+.search-box::placeholder{color:var(--text3)}
 
 /* Bottom nav */
-.bottom-nav{display:flex;border-top:1px solid #161616;padding-bottom:var(--safe-bot);background:#000}
-.nav-btn{flex:1;background:none;border:none;color:#444;font-family:'Inter',sans-serif;font-size:0.75rem;padding:12px 0 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:color 0.2s}
-.nav-btn.active{color:#fff}
-.nav-icon{font-size:1.3rem}
+.bottom-nav{display:flex;border-top:1px solid var(--border);padding-bottom:var(--safe-bot);background:var(--bg)}
+.nav-btn{flex:1;background:none;border:none;color:var(--text3);font-family:'Inter',sans-serif;font-size:0.7rem;padding:12px 0 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;transition:color 0.2s;letter-spacing:0.04em}
+.nav-btn.active{color:var(--text)}
+.nav-icon{font-size:1.2rem}
+.nav-count{font-size:0.6rem;opacity:0.5;font-variant-numeric:tabular-nums}
 
 /* List */
-.list-wrap{flex:1;overflow-y:auto;padding:0 20px 20px}
-.entry-card{border-bottom:1px solid #111;padding:18px 0;cursor:pointer;transition:opacity 0.2s}
-.entry-card:active{opacity:0.5}
-.card-title{display:block;font-size:0.95rem;text-transform:capitalize;margin-bottom:4px}
-.card-date{display:block;font-size:0.7rem;color:#444;letter-spacing:0.08em}
-.empty-msg{color:#333;font-style:italic;text-align:center;margin-top:60px;font-family:'Cormorant Garamond',serif;font-size:1.1rem}
-.loading-msg{color:#333;text-align:center;margin-top:60px;font-size:0.8rem;letter-spacing:0.1em}
+.list-wrap{flex:1;overflow-y:auto;padding:0 20px 20px;-webkit-overflow-scrolling:touch}
+.entry-card{border-bottom:1px solid var(--border);padding:16px 0;cursor:pointer;transition:opacity 0.15s;display:flex;align-items:center;gap:14px}
+.entry-card:active{opacity:0.4}
+.card-icon{width:36px;height:36px;border-radius:8px;background:var(--accent-dim);display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:1.1rem;color:var(--accent);flex-shrink:0;font-style:italic}
+.card-body{flex:1;min-width:0}
+.card-title{display:block;font-size:0.9rem;text-transform:capitalize;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card-preview{display:block;font-size:0.75rem;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:3px}
+.card-date{display:block;font-size:0.65rem;color:var(--text3);letter-spacing:0.08em;font-variant-numeric:tabular-nums}
+.empty-msg{color:var(--text3);font-style:italic;text-align:center;margin-top:60px;font-family:'Cormorant Garamond',serif;font-size:1.1rem}
+.loading-msg{color:var(--text3);text-align:center;margin-top:60px;font-size:0.8rem;letter-spacing:0.1em}
 
 /* FAB */
-.fab{position:absolute;right:24px;bottom:calc(72px + var(--safe-bot));width:52px;height:52px;border-radius:50%;background:#fff;color:#000;border:none;font-size:1.5rem;font-weight:300;cursor:pointer;box-shadow:0 2px 12px rgba(0,0,0,0.8);z-index:10;transition:transform 0.15s}
-.fab:active{transform:scale(0.9)}
+.fab{position:absolute;right:24px;bottom:calc(72px + var(--safe-bot));width:52px;height:52px;border-radius:50%;background:var(--accent);color:var(--bg);border:none;font-size:1.6rem;font-weight:300;cursor:pointer;box-shadow:0 4px 20px rgba(200,169,126,0.3);z-index:10;transition:transform 0.15s,box-shadow 0.15s}
+.fab:active{transform:scale(0.9);box-shadow:0 2px 8px rgba(200,169,126,0.2)}
 
 /* PIN gate */
 .pin-gate{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:32px}
-.pin-gate p{color:#555;font-size:0.85rem;letter-spacing:0.1em}
-.pin-input{background:transparent;border:none;border-bottom:2px solid #333;color:#fff;font-size:2rem;text-align:center;width:160px;padding:8px;letter-spacing:0.5em;outline:none;font-family:'Inter',sans-serif}
-.pin-input:focus{border-color:#fff}
-.pin-btn{background:none;border:1px solid #333;color:#fff;font-family:'Inter',sans-serif;font-size:0.85rem;padding:10px 32px;border-radius:4px;cursor:pointer;transition:all 0.2s}
-.pin-btn:hover{border-color:#fff}
-.pin-err{color:#ff4444;font-size:0.75rem;min-height:18px}
+.pin-gate p{color:var(--text2);font-size:0.85rem;letter-spacing:0.1em}
+.pin-input{background:transparent;border:none;border-bottom:2px solid var(--border);color:var(--text);font-size:2rem;text-align:center;width:160px;padding:8px;letter-spacing:0.5em;outline:none;font-family:'Inter',sans-serif}
+.pin-input:focus{border-color:var(--accent)}
+.pin-btn{background:none;border:1px solid var(--border);color:var(--text);font-family:'Inter',sans-serif;font-size:0.85rem;padding:10px 32px;border-radius:6px;cursor:pointer;transition:all 0.2s}
+.pin-btn:hover{border-color:var(--accent);color:var(--accent)}
+.pin-err{color:var(--danger);font-size:0.75rem;min-height:18px}
 
 /* Editor */
-.editor-title{width:100%;background:transparent;border:none;color:#fff;font-family:'Cormorant Garamond',serif;font-size:1.6rem;padding:20px 20px 12px;outline:none}
-.editor-title::placeholder{color:#333}
+.editor-title{width:100%;background:transparent;border:none;color:var(--text);font-family:'Cormorant Garamond',serif;font-size:1.6rem;padding:20px 20px 12px;outline:none}
+.editor-title::placeholder{color:var(--text3)}
 .editor-content{flex:1;width:100%;background:transparent;border:none;color:#ccc;font-family:'Cormorant Garamond',serif;font-size:1.15rem;line-height:1.9;padding:0 20px 20px;outline:none;resize:none}
-.editor-content::placeholder{color:#222}
+.editor-content::placeholder{color:#1a1a1a}
+.editor-meta{display:flex;justify-content:space-between;padding:0 20px 8px;font-size:0.65rem;color:var(--text3);letter-spacing:0.05em}
+.draft-badge{color:var(--accent);font-size:0.65rem;opacity:0;transition:opacity 0.3s}
+.draft-badge.show{opacity:1}
 
 /* Viewer */
-.viewer-body{flex:1;overflow-y:auto;padding:20px 24px 40px;text-align:center}
-.viewer-title{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:400;font-style:italic;margin-bottom:8px}
-.viewer-date{font-size:0.7rem;color:#444;letter-spacing:0.15em;margin-bottom:32px}
-.viewer-text{font-family:'Cormorant Garamond',serif;font-size:1.15rem;line-height:2;color:#ccc;white-space:pre-line}
+.viewer-body{flex:1;overflow-y:auto;padding:20px 24px 40px;text-align:center;-webkit-overflow-scrolling:touch}
+.viewer-title{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:300;font-style:italic;margin-bottom:8px}
+.viewer-date{font-size:0.65rem;color:var(--text3);letter-spacing:0.2em;text-transform:uppercase;margin-bottom:36px}
+.viewer-text{font-family:'Cormorant Garamond',serif;font-size:1.15rem;line-height:2;color:#ccc;white-space:pre-line;text-align:left;max-width:520px;margin:0 auto}
+.viewer-text strong{color:var(--text);font-weight:600}
+.viewer-text em{font-style:italic;color:var(--accent)}
 
 /* Toast */
-.toast{position:fixed;bottom:calc(80px + var(--safe-bot));left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;font-size:0.8rem;padding:10px 24px;border-radius:20px;opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:100}
-.toast.show{opacity:1}
+.toast{position:fixed;bottom:calc(80px + var(--safe-bot));left:50%;transform:translateX(-50%) translateY(20px);background:var(--bg3);color:var(--text);font-size:0.8rem;padding:10px 24px;border-radius:20px;opacity:0;transition:all 0.3s;pointer-events:none;z-index:100;border:1px solid var(--border)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.toast-err{border-color:var(--danger);color:var(--danger)}
 
 /* Settings */
 .settings-content{flex:1;overflow-y:auto;padding:20px}
-.settings-item{padding:18px 0;border-bottom:1px solid #111;cursor:pointer}
-.settings-item:active{opacity:0.5}
+.settings-item{padding:18px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:opacity 0.15s}
+.settings-item:active{opacity:0.4}
 .settings-label{font-size:0.9rem;margin-bottom:4px}
-.settings-desc{font-size:0.7rem;color:#444}
-.settings-danger{color:#ff4444}
+.settings-desc{font-size:0.7rem;color:var(--text3)}
+.settings-danger{color:var(--danger)}
 
 /* Delete confirm overlay */
-.confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:50;padding:24px}
-.confirm-box{background:#111;border:1px solid #222;border-radius:12px;padding:28px 24px;max-width:320px;width:100%;text-align:center}
-.confirm-box p{font-size:0.9rem;color:#aaa;margin-bottom:8px;line-height:1.5}
-.confirm-box .confirm-name{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-style:italic;color:#fff;margin-bottom:24px}
-.confirm-btns{display:flex;gap:12px}
-.confirm-btns button{flex:1;padding:12px;border-radius:6px;border:none;font-family:'Inter',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer}
-.confirm-cancel{background:#222;color:#fff}
-.confirm-cancel:active{opacity:0.6}
-.confirm-delete{background:#ff4444;color:#fff}
-.confirm-delete:active{opacity:0.6}
+.confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:50;padding:24px;opacity:0;transition:opacity 0.2s;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.confirm-overlay.show{opacity:1}
+.confirm-box{background:var(--bg3);border:1px solid var(--border);border-radius:14px;padding:28px 24px;max-width:300px;width:100%;text-align:center;transform:scale(0.95);transition:transform 0.2s}
+.confirm-overlay.show .confirm-box{transform:scale(1)}
+.confirm-box p{font-size:0.85rem;color:var(--text2);margin-bottom:6px;line-height:1.5}
+.confirm-box .confirm-name{font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-style:italic;color:var(--text);margin-bottom:24px}
+.confirm-btns{display:flex;gap:10px}
+.confirm-btns button{flex:1;padding:12px;border-radius:8px;border:none;font-family:'Inter',sans-serif;font-size:0.85rem;font-weight:500;cursor:pointer;transition:opacity 0.15s}
+.confirm-btns button:active{opacity:0.5}
+.confirm-cancel{background:var(--border);color:var(--text)}
+.confirm-delete{background:var(--danger);color:#fff}
+
+/* Discard changes overlay */
+.discard-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:50;padding:24px;opacity:0;transition:opacity 0.2s;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.discard-overlay.show{opacity:1}
 </style>
 </head>
 <body>
@@ -126,7 +167,10 @@ body{background:#000;color:#fff;font-family:'Inter',system-ui,sans-serif;font-we
 <div id="v-main" class="view">
   <div class="topbar">
     <h2 id="main-title">Poemas</h2>
-    <button class="topbar-btn" onclick="showSettings()" style="font-size:1.1rem">&#9881;</button>
+    <button class="topbar-btn" onclick="showSettings()" style="font-size:1.1rem;opacity:0.5">&#9881;</button>
+  </div>
+  <div class="search-wrap" id="search-wrap">
+    <input type="text" class="search-box" id="search-box" placeholder="Buscar..." oninput="filterList()">
   </div>
   <div id="poems-list" class="list-wrap"></div>
   <div id="dreams-gate" class="pin-gate" style="display:none">
@@ -138,20 +182,29 @@ body{background:#000;color:#fff;font-family:'Inter',system-ui,sans-serif;font-we
   <div id="dreams-list" class="list-wrap" style="display:none"></div>
   <button class="fab" onclick="newEntry()">+</button>
   <nav class="bottom-nav">
-    <button class="nav-btn active" onclick="switchTab('poems',this)"><span class="nav-icon">&#10022;</span>Poemas</button>
-    <button class="nav-btn" onclick="switchTab('dreams',this)"><span class="nav-icon">&#9790;</span>Sueños</button>
+    <button class="nav-btn active" id="tab-poems" onclick="switchTab('poems',this)">
+      <span class="nav-icon">&#10022;</span>Poemas<span class="nav-count" id="count-poems"></span>
+    </button>
+    <button class="nav-btn" id="tab-dreams" onclick="switchTab('dreams',this)">
+      <span class="nav-icon">&#9790;</span>Sueños<span class="nav-count" id="count-dreams"></span>
+    </button>
   </nav>
 </div>
 
 <!-- EDITOR VIEW -->
 <div id="v-editor" class="view">
   <div class="topbar">
-    <button class="topbar-btn topbar-back" onclick="closeEditor()">&#8249;</button>
+    <button class="topbar-btn topbar-back" onclick="tryCloseEditor()">&#8249;</button>
     <h2 id="ed-label" style="flex:1">Nuevo poema</h2>
+    <span class="draft-badge" id="draft-badge">borrador</span>
     <button class="topbar-btn topbar-action" id="ed-save" onclick="publish()">Publicar</button>
   </div>
-  <input id="ed-title" class="editor-title" placeholder="Título" autocomplete="off">
-  <textarea id="ed-content" class="editor-content" placeholder="Escribe aquí..."></textarea>
+  <div class="editor-meta">
+    <span id="ed-wordcount">0 palabras</span>
+    <span id="ed-charcount">0 caracteres</span>
+  </div>
+  <input id="ed-title" class="editor-title" placeholder="Título" autocomplete="off" oninput="onEditorChange()">
+  <textarea id="ed-content" class="editor-content" placeholder="Escribe aquí..." oninput="onEditorChange()"></textarea>
 </div>
 
 <!-- VIEWER VIEW -->
@@ -188,13 +241,25 @@ body{background:#000;color:#fff;font-family:'Inter',system-ui,sans-serif;font-we
 </div>
 
 <!-- DELETE CONFIRMATION -->
-<div id="confirm-overlay" class="confirm-overlay" style="display:none">
+<div id="confirm-overlay" class="confirm-overlay">
   <div class="confirm-box">
     <p>¿Eliminar esto?</p>
     <div id="confirm-name" class="confirm-name"></div>
     <div class="confirm-btns">
       <button class="confirm-cancel" onclick="cancelDelete()">Cancelar</button>
       <button class="confirm-delete" id="confirm-del-btn" onclick="doDelete()">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- DISCARD CHANGES -->
+<div id="discard-overlay" class="discard-overlay">
+  <div class="confirm-box">
+    <p>Tienes cambios sin guardar</p>
+    <div class="confirm-name">¿Descartar?</div>
+    <div class="confirm-btns">
+      <button class="confirm-cancel" onclick="cancelDiscard()">Seguir editando</button>
+      <button class="confirm-delete" onclick="forceCloseEditor()">Descartar</button>
     </div>
   </div>
 </div>
@@ -206,28 +271,52 @@ const API='https://api.github.com';
 const POEMS_REPO='Madara7337/poemas';
 const DREAMS_REPO='Madara7337/suenos';
 let tab='poems',unlocked=false;
-let currentEntry=null; // {repo, path, sha, title, body, date}
-let editMode=false;    // true when editing existing entry
-let editSha=null;      // sha of file being edited
-let editPath=null;     // path of file being edited
-let editRepo=null;     // repo of file being edited
+let currentEntry=null;
+let editMode=false,editSha=null,editPath=null,editRepo=null;
+let editorDirty=false;
+let draftTimer=null;
+let allPoems=[],allDreams=[];
 
-function getToken(){try{return localStorage.getItem('cdr_tk')}catch(e){return null}}
-function setToken(t){try{localStorage.setItem('cdr_tk',t)}catch(e){}}
-function getPinHash(){try{return localStorage.getItem('cdr_ph')}catch(e){return null}}
-function setPinHash(h){try{localStorage.setItem('cdr_ph',h)}catch(e){}}
+function getToken(){try{return localStorage.getItem('cdr_tk')}catch{return null}}
+function setToken(t){try{localStorage.setItem('cdr_tk',t)}catch{}}
+function getPinHash(){try{return localStorage.getItem('cdr_ph')}catch{return null}}
+function setPinHash(h){try{localStorage.setItem('cdr_ph',h)}catch{}}
+function getDraft(){try{const d=localStorage.getItem('cdr_draft');return d?JSON.parse(d):null}catch{return null}}
+function saveDraft(d){try{localStorage.setItem('cdr_draft',JSON.stringify(d))}catch{}}
+function clearDraft(){try{localStorage.removeItem('cdr_draft')}catch{}}
 
 async function sha256(s){
   const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
   return[...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 
-function show(id){document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));document.getElementById(id).classList.add('active')}
-function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500)}
+function showView(id,slide){
+  const views=document.querySelectorAll('.view');
+  const target=document.getElementById(id);
+  views.forEach(v=>{
+    if(v===target)return;
+    if(v.classList.contains('active')){
+      v.classList.remove('active');
+      if(slide){v.classList.add('slide-out');setTimeout(()=>v.classList.remove('slide-out'),200)}
+    }
+  });
+  target.classList.remove('slide-out');
+  if(slide){target.classList.add('slide-in');target.classList.add('active');setTimeout(()=>target.classList.remove('slide-in'),250)}
+  else{target.classList.add('active')}
+}
+
+function toast(msg,err){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(err?' toast-err':'')+' show';clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2500)}
 
 function init(){
-  if(!getToken()||!getPinHash()){show('v-setup')}
-  else{show('v-main');loadPoems()}
+  if(!getToken()||!getPinHash()){showView('v-setup')}
+  else{showView('v-main');loadPoems();checkDraft()}
+}
+
+function checkDraft(){
+  const d=getDraft();
+  if(d&&d.title&&d.content){
+    toast('Borrador recuperado');
+  }
 }
 
 async function doSetup(){
@@ -242,11 +331,11 @@ async function doSetup(){
   try{
     const r=await fetch(API+'/user',{headers:{Authorization:'token '+tk}});
     if(!r.ok){err.textContent='Token inválido';return}
-  }catch(e){err.textContent='Error de conexión';return}
+  }catch{err.textContent='Error de conexión';return}
   setToken(tk);setPinHash(await sha256(p1));
   await ensureDir(POEMS_REPO,'poems');
   await ensureDir(DREAMS_REPO,'dreams');
-  show('v-main');loadPoems();toast('Configurado ✓');
+  showView('v-main');loadPoems();toast('Configurado');
 }
 
 async function ghFetch(url,opts={}){
@@ -262,7 +351,8 @@ async function ensureDir(repo,dir){
 async function listFiles(repo,dir){
   const r=await ghFetch(`${API}/repos/${repo}/contents/${dir}`);
   if(!r.ok)return[];
-  return(await r.json()).filter(f=>f.name.endsWith('.md')&&f.name!=='.gitkeep').sort((a,b)=>b.name.localeCompare(a.name));
+  const files=(await r.json()).filter(f=>f.name.endsWith('.md')&&f.name!=='.gitkeep').sort((a,b)=>b.name.localeCompare(a.name));
+  return files;
 }
 
 async function getFile(repo,path){
@@ -284,19 +374,30 @@ async function deleteFile(repo,path,sha,msg){
   return r.ok;
 }
 
-function renderList(files,container){
+function fileToEntry(f){
+  const name=f.name.replace('.md','').replace(/^\d{4}-\d{2}-\d{2}-/,'').replace(/-/g,' ');
+  const dm=f.name.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  const months=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  const dateStr=dm?`${parseInt(dm[3])} ${months[parseInt(dm[2])-1]} ${dm[1]}`:'';
+  return{name,dateStr,path:f.path,initial:name.charAt(0).toUpperCase()};
+}
+
+function renderList(entries,container,repo){
   const el=document.getElementById(container);
-  if(!files.length){el.innerHTML='<p class="empty-msg">Nada aún...</p>';return}
+  const q=document.getElementById('search-box').value.toLowerCase();
+  const filtered=q?entries.filter(e=>e.name.toLowerCase().includes(q)):entries;
+
+  if(!filtered.length){
+    el.innerHTML=entries.length
+      ?'<p class="empty-msg">Sin resultados</p>'
+      :'<p class="empty-msg">Nada aún...</p>';
+    return;
+  }
   el.innerHTML='';
-  for(const f of files){
+  for(const e of filtered){
     const c=document.createElement('div');c.className='entry-card';
-    const name=f.name.replace('.md','').replace(/^\d{4}-\d{2}-\d{2}-/,'').replace(/-/g,' ');
-    const dm=f.name.match(/^(\d{4})-(\d{2})-(\d{2})/);
-    const months=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
-    const dateStr=dm?`${parseInt(dm[3])} ${months[parseInt(dm[2])-1]} ${dm[1]}`:'';
-    c.innerHTML=`<span class="card-title">${name}</span><span class="card-date">${dateStr}</span>`;
-    const repo=container==='poems-list'?POEMS_REPO:DREAMS_REPO;
-    c.onclick=()=>viewEntry(repo,f.path);
+    c.innerHTML=`<div class="card-icon">${e.initial}</div><div class="card-body"><span class="card-title">${e.name}</span><span class="card-date">${e.dateStr}</span></div>`;
+    c.onclick=()=>viewEntry(repo,e.path);
     el.appendChild(c);
   }
 }
@@ -304,13 +405,22 @@ function renderList(files,container){
 async function loadPoems(){
   document.getElementById('poems-list').innerHTML='<p class="loading-msg">cargando...</p>';
   const files=await listFiles(POEMS_REPO,'poems');
-  renderList(files,'poems-list');
+  allPoems=files.map(fileToEntry);
+  renderList(allPoems,'poems-list',POEMS_REPO);
+  document.getElementById('count-poems').textContent=allPoems.length||'';
 }
 
 async function loadDreams(){
   document.getElementById('dreams-list').innerHTML='<p class="loading-msg">cargando...</p>';
   const files=await listFiles(DREAMS_REPO,'dreams');
-  renderList(files,'dreams-list');
+  allDreams=files.map(fileToEntry);
+  renderList(allDreams,'dreams-list',DREAMS_REPO);
+  document.getElementById('count-dreams').textContent=allDreams.length||'';
+}
+
+function filterList(){
+  if(tab==='poems')renderList(allPoems,'poems-list',POEMS_REPO);
+  else if(unlocked)renderList(allDreams,'dreams-list',DREAMS_REPO);
 }
 
 function switchTab(t,btn){
@@ -320,15 +430,17 @@ function switchTab(t,btn){
   const pl=document.getElementById('poems-list');
   const dg=document.getElementById('dreams-gate');
   const dl=document.getElementById('dreams-list');
+  const sw=document.getElementById('search-wrap');
+  document.getElementById('search-box').value='';
   if(t==='poems'){
     document.getElementById('main-title').textContent='Poemas';
-    pl.style.display='';dg.style.display='none';dl.style.display='none';
+    pl.style.display='';dg.style.display='none';dl.style.display='none';sw.style.display='';
     loadPoems();
   }else{
     document.getElementById('main-title').textContent='Sueños';
     pl.style.display='none';
-    if(unlocked){dg.style.display='none';dl.style.display='';loadDreams()}
-    else{dg.style.display='';dl.style.display='none';setTimeout(()=>document.getElementById('pin-input').focus(),100)}
+    if(unlocked){dg.style.display='none';dl.style.display='';sw.style.display='';loadDreams()}
+    else{dg.style.display='';dl.style.display='none';sw.style.display='none';setTimeout(()=>document.getElementById('pin-input').focus(),100)}
   }
 }
 
@@ -341,6 +453,7 @@ async function checkPin(){
     document.getElementById('pin-err').textContent='';
     document.getElementById('dreams-gate').style.display='none';
     document.getElementById('dreams-list').style.display='';
+    document.getElementById('search-wrap').style.display='';
     loadDreams();
   }else{
     document.getElementById('pin-err').textContent='PIN incorrecto';
@@ -348,16 +461,49 @@ async function checkPin(){
   }
 }
 
+function updateEditorMeta(){
+  const content=document.getElementById('ed-content').value;
+  const words=content.trim()?content.trim().split(/\s+/).length:0;
+  const chars=content.length;
+  document.getElementById('ed-wordcount').textContent=words+' palabra'+(words!==1?'s':'');
+  document.getElementById('ed-charcount').textContent=chars+' caracter'+(chars!==1?'es':'');
+}
+
+function onEditorChange(){
+  editorDirty=true;
+  updateEditorMeta();
+  clearTimeout(draftTimer);
+  draftTimer=setTimeout(()=>{
+    const title=document.getElementById('ed-title').value;
+    const content=document.getElementById('ed-content').value;
+    if(title||content){
+      saveDraft({title,content,tab,editMode,editPath,editRepo,editSha,ts:Date.now()});
+      document.getElementById('draft-badge').classList.add('show');
+      setTimeout(()=>document.getElementById('draft-badge').classList.remove('show'),1500);
+    }
+  },1000);
+}
+
 function newEntry(){
-  editMode=false;editSha=null;editPath=null;editRepo=null;
+  editMode=false;editSha=null;editPath=null;editRepo=null;editorDirty=false;
   const type=tab==='poems'?'poema':'sueño';
   document.getElementById('ed-label').textContent='Nuevo '+type;
-  document.getElementById('ed-title').value='';
-  document.getElementById('ed-content').value='';
+
+  const draft=getDraft();
+  if(draft&&!draft.editMode&&draft.tab===tab&&Date.now()-draft.ts<86400000){
+    document.getElementById('ed-title').value=draft.title||'';
+    document.getElementById('ed-content').value=draft.content||'';
+    toast('Borrador recuperado');
+  }else{
+    document.getElementById('ed-title').value='';
+    document.getElementById('ed-content').value='';
+  }
+
   document.getElementById('ed-save').disabled=false;
   document.getElementById('ed-save').textContent='Publicar';
-  show('v-editor');
-  setTimeout(()=>document.getElementById('ed-title').focus(),100);
+  updateEditorMeta();
+  showView('v-editor',true);
+  setTimeout(()=>document.getElementById('ed-title').focus(),260);
 }
 
 function editEntry(){
@@ -366,25 +512,28 @@ function editEntry(){
   editSha=currentEntry.sha;
   editPath=currentEntry.path;
   editRepo=currentEntry.repo;
+  editorDirty=false;
   const isPoem=editRepo===POEMS_REPO;
   document.getElementById('ed-label').textContent='Editar '+(isPoem?'poema':'sueño');
   document.getElementById('ed-title').value=currentEntry.title||'';
   document.getElementById('ed-content').value=currentEntry.body||'';
   document.getElementById('ed-save').disabled=false;
   document.getElementById('ed-save').textContent='Guardar';
-  show('v-editor');
-  setTimeout(()=>document.getElementById('ed-content').focus(),100);
+  updateEditorMeta();
+  showView('v-editor',true);
+  setTimeout(()=>document.getElementById('ed-content').focus(),260);
 }
 
 async function publish(){
   const title=document.getElementById('ed-title').value.trim();
   const content=document.getElementById('ed-content').value.trim();
-  if(!title){toast('Escribe un título');return}
-  if(!content){toast('Escribe algo');return}
+  if(!title){toast('Escribe un título',true);return}
+  if(!content){toast('Escribe algo',true);return}
   const btn=document.getElementById('ed-save');
   btn.disabled=true;btn.textContent='...';
 
-  const body=`---\ntitle: ${title}\ndate: ${editMode&&currentEntry?currentEntry.date:new Date().toISOString().split('T')[0]}\n---\n\n${content}\n`;
+  const date=editMode&&currentEntry?currentEntry.date:new Date().toISOString().split('T')[0];
+  const body=`---\ntitle: ${title}\ndate: ${date}\n---\n\n${content}\n`;
 
   if(editMode&&editPath&&editRepo){
     const isPoem=editRepo===POEMS_REPO;
@@ -392,14 +541,13 @@ async function publish(){
     const ok=await putFile(editRepo,editPath,body,msg,editSha);
     btn.disabled=false;btn.textContent='Guardar';
     if(ok){
+      clearDraft();editorDirty=false;
       editMode=false;editSha=null;editPath=null;editRepo=null;
-      show('v-main');
-      toast(isPoem?'Poema actualizado ✓':'Sueño actualizado ✓');
+      showView('v-main');
+      toast(isPoem?'Poema actualizado':'Sueño actualizado');
       if(isPoem)loadPoems();else loadDreams();
-    }else{toast('Error al guardar')}
+    }else{toast('Error al guardar',true)}
   }else{
-    const now=new Date();
-    const date=now.toISOString().split('T')[0];
     const slug=title.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
     const filename=`${date}-${slug}.md`;
     const isPoem=tab==='poems';
@@ -409,10 +557,11 @@ async function publish(){
     const ok=await putFile(repo,`${dir}/${filename}`,body,msg);
     btn.disabled=false;btn.textContent='Publicar';
     if(ok){
-      show('v-main');
-      toast(isPoem?'Poema publicado ✓':'Sueño guardado ✓');
+      clearDraft();editorDirty=false;
+      showView('v-main');
+      toast(isPoem?'Poema publicado':'Sueño guardado');
       if(isPoem)loadPoems();else loadDreams();
-    }else{toast('Error al publicar')}
+    }else{toast('Error al publicar',true)}
   }
 }
 
@@ -423,28 +572,41 @@ function parseFM(txt){
   return{...meta,body:m[2].trim()};
 }
 
+function renderMarkdown(text){
+  return text
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,'<em>$1</em>')
+    .replace(/_(.+?)_/g,'<em>$1</em>')
+    .replace(/~~(.+?)~~/g,'<del>$1</del>');
+}
+
 async function viewEntry(repo,path){
-  show('v-viewer');
+  showView('v-viewer',true);
   const vb=document.getElementById('viewer-body');
   vb.innerHTML='<p class="loading-msg">cargando...</p>';
   const file=await getFile(repo,path);
   if(!file){vb.innerHTML='<p class="empty-msg">Error al cargar</p>';currentEntry=null;return}
   const p=parseFM(file.content);
-  currentEntry={repo:repo,path:path,sha:file.sha,title:p.title,body:p.body,date:p.date};
+  currentEntry={repo,path,sha:file.sha,title:p.title,body:p.body,date:p.date};
   const months=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
   let dateStr='';
   if(p.date){const[y,m,d]=p.date.split('-');dateStr=`${parseInt(d)} de ${months[parseInt(m)-1]} ${y}`}
-  vb.innerHTML=`<h2 class="viewer-title">${p.title||'Sin título'}</h2><p class="viewer-date">${dateStr}</p><div class="viewer-text">${p.body}</div>`;
+  const rendered=renderMarkdown(p.body);
+  vb.innerHTML=`<h2 class="viewer-title">${p.title||'Sin título'}</h2><p class="viewer-date">${dateStr}</p><div class="viewer-text">${rendered}</div>`;
 }
 
 function confirmDeleteEntry(){
   if(!currentEntry)return;
   document.getElementById('confirm-name').textContent=currentEntry.title||'Sin título';
-  document.getElementById('confirm-overlay').style.display='flex';
+  const o=document.getElementById('confirm-overlay');
+  o.style.display='flex';
+  requestAnimationFrame(()=>o.classList.add('show'));
 }
 
 function cancelDelete(){
-  document.getElementById('confirm-overlay').style.display='none';
+  const o=document.getElementById('confirm-overlay');
+  o.classList.remove('show');
+  setTimeout(()=>{o.style.display='none'},200);
 }
 
 async function doDelete(){
@@ -455,45 +617,64 @@ async function doDelete(){
   const msg=isPoem?`Eliminar poema: ${currentEntry.title}`:`Eliminar sueño: ${currentEntry.title}`;
   const ok=await deleteFile(currentEntry.repo,currentEntry.path,currentEntry.sha,msg);
   btn.disabled=false;btn.textContent='Eliminar';
-  document.getElementById('confirm-overlay').style.display='none';
+  cancelDelete();
   if(ok){
     currentEntry=null;
-    show('v-main');
+    showView('v-main');
     toast(isPoem?'Poema eliminado':'Sueño eliminado');
     if(isPoem)loadPoems();else loadDreams();
-  }else{toast('Error al eliminar')}
+  }else{toast('Error al eliminar',true)}
 }
 
-function closeEditor(){
-  editMode=false;editSha=null;editPath=null;editRepo=null;
-  if(currentEntry)show('v-viewer');else show('v-main');
+function tryCloseEditor(){
+  if(editorDirty){
+    const o=document.getElementById('discard-overlay');
+    o.style.display='flex';
+    requestAnimationFrame(()=>o.classList.add('show'));
+  }else{forceCloseEditor()}
 }
-function closeViewer(){currentEntry=null;show('v-main')}
-function showSettings(){show('v-settings')}
-function closeSettings(){show('v-main')}
+
+function cancelDiscard(){
+  const o=document.getElementById('discard-overlay');
+  o.classList.remove('show');
+  setTimeout(()=>{o.style.display='none'},200);
+}
+
+function forceCloseEditor(){
+  cancelDiscard();
+  editorDirty=false;
+  editMode=false;editSha=null;editPath=null;editRepo=null;
+  clearDraft();
+  if(currentEntry)showView('v-viewer');else showView('v-main');
+}
+
+function closeViewer(){currentEntry=null;showView('v-main')}
+function showSettings(){showView('v-settings',true)}
+function closeSettings(){showView('v-main')}
 
 async function changePin(){
   const old=prompt('PIN actual:');if(!old)return;
   const h=await sha256(old);
-  if(h!==getPinHash()){toast('PIN incorrecto');return}
-  const n=prompt('Nuevo PIN (4+ dígitos):');if(!n||n.length<4){toast('Mínimo 4 dígitos');return}
-  const c=prompt('Confirmar nuevo PIN:');if(n!==c){toast('No coinciden');return}
-  setPinHash(await sha256(n));unlocked=false;toast('PIN cambiado ✓');closeSettings();
+  if(h!==getPinHash()){toast('PIN incorrecto',true);return}
+  const n=prompt('Nuevo PIN (4+ dígitos):');if(!n||n.length<4){toast('Mínimo 4 dígitos',true);return}
+  const c=prompt('Confirmar nuevo PIN:');if(n!==c){toast('No coinciden',true);return}
+  setPinHash(await sha256(n));unlocked=false;toast('PIN cambiado');closeSettings();
 }
 
 function changeToken(){
   const t=prompt('Nuevo GitHub Token:');if(!t)return;
-  setToken(t.trim());toast('Token actualizado ✓');closeSettings();
+  setToken(t.trim());toast('Token actualizado');closeSettings();
 }
 
 function resetApp(){
   if(!confirm('¿Borrar token y PIN de este dispositivo?'))return;
-  try{localStorage.removeItem('cdr_tk');localStorage.removeItem('cdr_ph')}catch(e){}
-  unlocked=false;show('v-setup');toast('Datos borrados');
+  try{localStorage.removeItem('cdr_tk');localStorage.removeItem('cdr_ph');clearDraft()}catch{}
+  unlocked=false;showView('v-setup');toast('Datos borrados');
 }
 
 document.getElementById('pin-input').addEventListener('keydown',e=>{if(e.key==='Enter')checkPin()});
-document.getElementById('confirm-overlay').addEventListener('click',e=>{if(e.target===document.getElementById('confirm-overlay'))cancelDelete()});
+document.getElementById('confirm-overlay').addEventListener('click',e=>{if(e.target.id==='confirm-overlay')cancelDelete()});
+document.getElementById('discard-overlay').addEventListener('click',e=>{if(e.target.id==='discard-overlay')cancelDiscard()});
 
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 init();
