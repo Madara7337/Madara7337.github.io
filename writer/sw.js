@@ -1,4 +1,4 @@
-const CACHE = 'cuaderno-v1';
+const CACHE = 'cuaderno-v2';
 const URLS = ['./','./manifest.json'];
 
 self.addEventListener('install', e => {
